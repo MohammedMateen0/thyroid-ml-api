@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThyroAI | Diagnosis System</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* --- VARIABLES --- */
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --secondary: #a855f7;
+            --accent: #ec4899;
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.4);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --backdrop: blur(30px) saturate(160%);
+            --text-main: #1e293b;
+            --text-muted: #475569;
+        }
+
+        /* --- GLOBAL --- */
+        body {margin:0;font-family:'Outfit',sans-serif;background:#f0f2f5;color:var(--text-main);min-height:100vh;overflow-x:hidden;cursor:default;}
+        
+        #mouse-aura {position:fixed;top:0;left:0;width:300px;height:300px;background:radial-gradient(circle,rgba(99,102,241,0.15),transparent 70%);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .3s,height .3s,background .3s;mix-blend-mode:plus-lighter;}
+        body.hover-active #mouse-aura {width:120px;height:120px;background:radial-gradient(circle,rgba(236,72,153,0.4),transparent 70%);}
+
+        .bg-gradient {position:fixed;top:0;left:0;width:100%;height:100%;z-index:-2;background:linear-gradient(120deg,#e0e7ff,#f3e8ff,#fce7f3,#e0e7ff);background-size:400% 400%;animation:gradientShift 15s ease infinite;}
+        @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+        .blob-cont{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;}
+        .blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.8;transition:transform .1s linear;}
+        .blob-1{top:-10%;left:-10%;width:50vh;height:50vh;background:#818cf8;animation:pulseBlob 8s infinite alternate;}
+        .blob-2{bottom:-10%;right:-10%;width:60vh;height:60vh;background:#c084fc;animation:pulseBlob 12s infinite alternate-reverse;}
+        .blob-3{top:40%;left:30%;width:40vh;height:40vh;background:#f472b6;animation:pulseBlob 10s infinite alternate;}
+        @keyframes pulseBlob{0%{transform:scale(1)}100%{transform:scale(1.1)}}
+
+        .reveal{opacity:0;transform:translateY(30px) scale(0.95);transition:all .8s cubic-bezier(.2,.8,.2,1);filter:blur(5px);}
+        .reveal.active{opacity:1;transform:translateY(0) scale(1);filter:blur(0);}
+
+        /* --- NAV --- */
+        .glass-nav{
+            display:flex;justify-content:space-between;align-items:center;
+            padding:15px 30px;margin:20px auto;width:90%;max-width:1000px;
+            background:rgba(255,255,255,0.6); backdrop-filter:blur(20px);
+            border-radius:50px;border:1px solid rgba(255,255,255,0.7);
+            box-shadow:0 10px 30px rgba(0,0,0,0.05);
+            position:sticky;top:20px;z-index:1000;transition:.3s; transform: translateZ(0);}
+        .nav-logo{font-weight:700;font-size:22px;color:var(--primary);display:flex;gap:10px;align-items:center;}
+        .nav-links a{text-decoration:none;color:var(--text-muted);font-weight:600;padding:10px 25px;border-radius:30px;transition:all .3s;}
+        .nav-links a:hover{background:rgba(255,255,255,0.8);color:var(--primary);transform:translateY(-2px);}
+        .nav-links a.active{background:white;color:var(--primary);box-shadow:0 4px 15px rgba(0,0,0,0.05);}
+
+        /* --- LAYOUT --- */
+        .container{max-width:900px;margin:0 auto;padding:40px 20px 100px;}
+        .hero{text-align:center;padding:40px 0 60px;}
+        .hero h1{font-size:56px;font-weight:800;margin:0;letter-spacing:-1px;background:linear-gradient(110deg,#1e293b 30%,#6366f1 50%,#1e293b 70%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 5s linear infinite;}
+        .hero p { font-size: 18px; color: var(--text-muted); margin-top: 10px; font-weight: 400; }
+
+        .glass-panel{position:relative;overflow:hidden;background:var(--glass-bg);backdrop-filter:var(--backdrop);border:var(--glass-border);box-shadow:var(--glass-shadow);border-radius:24px;padding:40px;margin-bottom:30px;transition:transform .2s,box-shadow .2s;}
+        .glass-panel::after{content:"";position:absolute;inset:0;background:radial-gradient(800px circle at var(--mouse-x) var(--mouse-y),rgba(255,255,255,0.4),transparent 40%);opacity:0;transition:opacity .5s;pointer-events:none;z-index:1;}
+        .glass-panel:hover::after{opacity:1;}
+        .glass-panel:hover{transform:translateY(-5px);background:rgba(255,255,255,0.35);}
+        .glass-panel > *{position:relative;z-index:2;}
+
+        h2{font-size:24px;color:#1e1b4b;margin-top:0;display:flex;align-items:center;gap:12px; margin-bottom: 25px;}
+        h2 i{background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:26px;filter:drop-shadow(0 4px 10px var(--primary-glow));}
+
+        /* --- FORM ELEMENTS --- */
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; }
+        .input-wrapper { display: flex; flex-direction: column; gap: 8px; position: relative; }
+        .input-label { font-size: 14px; font-weight: 600; color: var(--text-muted); padding-left: 5px; display: flex; justify-content: space-between;}
+        .req-star { color: #dc2626; }
+        
+        .glass-input {
+            width: 100%; padding: 15px 20px; background: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.6); border-radius: 16px;
+            font-size: 16px; color: var(--text-main); font-weight: 600; font-family: 'Outfit', sans-serif;
+            box-sizing: border-box; transition: all .3s cubic-bezier(.25,.8,.25,1);
+        }
+        .glass-input:focus { outline: none; background: rgba(255,255,255,0.9); border-color: var(--primary); box-shadow: 0 10px 25px var(--primary-glow); transform: translateY(-3px); }
+        .glass-input.input-error { border-color: #dc2626; background: #fef2f2; }
+        
+        select.glass-input {
+            cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 15px center; background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .chip-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+        .chip-check { position: absolute; opacity: 0; }
+        .glass-chip {
+            padding: 12px 20px; background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.6);
+            border-radius: 30px; font-size: 14px; font-weight: 500; color: var(--text-muted);
+            cursor: pointer; transition: all .3s cubic-bezier(.25,.8,.25,1); user-select: none; display: flex; align-items: center; gap: 8px;
+        }
+        .glass-chip:hover { background: white; transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .chip-check:checked + .glass-chip {
+            background: rgba(255,255,255,0.9); color: var(--primary); border-color: var(--primary);
+            box-shadow: 0 10px 25px var(--primary-glow); transform: translateY(-5px);
+        }
+        .chip-check:checked + .glass-chip::before { content: '\f00c'; font-family: "Font Awesome 6 Free"; font-weight: 900; }
+        .chip-check:checked + .glass-chip i { transform: scale(1.2); }
+
+        .glass-btn {
+            position: relative; overflow: hidden; background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.6);
+            color: var(--primary); font-size: 18px; font-weight: 700; padding: 20px; border-radius: 50px;
+            cursor: pointer; backdrop-filter: blur(5px); transition: .4s; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%;
+        }
+        .glass-btn:hover:not(:disabled) { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 10px 30px var(--primary-glow); transform: translateY(-3px) scale(1.02); }
+        .glass-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.4);transform:scale(0);animation:ripple-anim .6s linear;pointer-events:none;}
+        @keyframes ripple-anim{to{transform:scale(4);opacity:0;}}
+
+        .error-banner {
+            display: none; background: #fee2e2; border: 1px solid #f87171; color: #b91c1c;
+            padding: 15px; border-radius: 16px; margin-bottom: 20px; font-weight: 600; font-size: 14px; text-align: center;
+        }
+
+        /* --- PREMIUM RESULT DASHBOARD UI --- */
+        .result-glass {
+            display: none; margin-top: 40px;
+            background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border-radius: 24px; padding: 0; overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.8);
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: translateZ(0);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .res-header {
+            padding: 35px 40px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.4); position: relative; overflow: hidden;
+        }
+        
+        .res-header::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px;
+            background: var(--status-color, var(--primary));
+            box-shadow: 0 0 25px var(--status-color, var(--primary));
+            transition: all 0.5s ease;
+        }
+
+        .res-header-left { display: flex; align-items: center; gap: 20px; }
+        
+        .res-status-icon {
+            width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 32px; color: white; background: var(--status-color, var(--primary));
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: all 0.5s ease; flex-shrink: 0;
+        }
+
+        .res-header-texts h2 { font-size: 36px; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: -0.5px; }
+        .res-header-texts p { margin: 5px 0 0; color: var(--text-muted); font-size: 16px; font-weight: 500; }
+        .res-subtitle { font-size: 12px; font-weight: 700; color: var(--status-color, var(--primary)); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; display: block; }
+        
+        .res-body { padding: 40px; }
+        
+        .section-tag { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; display: block; opacity: 0.8; }
+        
+        .action-plan-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6));
+            border-left: 6px solid var(--status-color, var(--primary));
+            padding: 25px; border-radius: 16px; margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            border-top: 1px solid white; border-right: 1px solid white; border-bottom: 1px solid white;
+        }
+        .action-plan-card h3 { margin: 0 0 10px 0; color: var(--text-main); font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .action-plan-card p { margin: 0; color: var(--text-muted); font-size: 15.5px; line-height: 1.6; }
+
+        .res-panel {
+            background: rgba(255, 255, 255, 0.45); border: 1px solid rgba(255,255,255,0.7);
+            border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+            margin-bottom: 30px;
+        }
+
+        .base-model-row {
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 14px 15px; border-radius: 12px; 
+            background: rgba(255,255,255,0.7); border: 1px solid white; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+
+        /* Define the slideDown animation for base models */
+        @keyframes slideDown { 
+            from { opacity: 0; transform: translateY(-10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        @media(max-width:768px){
+            .hero h1{font-size:40px;}
+            .res-header { flex-direction: column; text-align: center; gap: 25px; }
+            .res-header-left { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="mouse-aura"></div>
+<div class="bg-gradient"></div>
+<div class="blob-cont">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+</div>
+
+<nav class="glass-nav reveal">
+    <div class="nav-logo"><i class="fas fa-dna"></i> ThyroAI</div>
+    <div class="nav-links">
+        <a href="{{ url_for('home') }}">Info Center</a>
+        <a href="/predictor" class="active">Predictor Tool</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="hero reveal">
+        <h1>Clinical Diagnosis System</h1>
+        <p>Enter patient biomarkers and clinical flags for AI-driven risk assessment</p>
+    </div>
+
+    <form id="predictionForm" novalidate>
+        
+        <div class="glass-panel reveal">
+            <h2><i class="fas fa-user-injured"></i> Patient Details</h2>
+            <div class="input-grid">
+                <div class="input-wrapper">
+                    <label class="input-label">Patient Age <span class="req-star">*</span></label>
+                    <input type="number" step="any" id="f0" class="glass-input required-num" placeholder="e.g. 45" required>
+                </div>
+                <div class="input-wrapper">
+                    <label class="input-label">Biological Sex <span class="req-star">*</span></label>
+                    <select id="f1" class="glass-input" required>
+                        <option value="0" selected>Female</option>
+                        <option value="1">Male</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel reveal">
+            <h2><i class="fas fa-vial"></i> Blood Profile</h2>
+            <div class="input-grid">
+                <div class="input-wrapper">
+                    <label class="input-label">TSH Level <span class="req-star">*</span></label>
+                    <input type="number" step="any" id="f16" class="glass-input required-num" placeholder="e.g. 2.5" required>
+                </div>
+                <div class="input-wrapper">
+                    <label class="input-label">T3 Level <span class="req-star">*</span></label>
+                    <input type="number" step="any" id="f17" class="glass-input required-num" placeholder="e.g. 1.8" required>
+                </div>
+                <div class="input-wrapper">
+                    <label class="input-label">TT4 Level <span class="req-star">*</span></label>
+                    <input type="number" step="any" id="f18" class="glass-input required-num" placeholder="e.g. 105" required>
+                </div>
+                <div class="input-wrapper">
+                    <label class="input-label">T4U Level <span class="req-star">*</span></label>
+                    <input type="number" step="any" id="f19" class="glass-input required-num" placeholder="e.g. 0.95" required>
+                </div>
+                <div class="input-wrapper">
+                    <label class="input-label">FTI Index <span class="req-star">*</span></label>
+                    <input type="number" step="any" id="f20" class="glass-input required-num" placeholder="e.g. 110" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel reveal">
+            <h2><i class="fas fa-notes-medical"></i> Clinical Flags & History</h2>
+            <div class="chip-grid">
+                <label><input type="checkbox" id="f2" class="chip-check"><span class="glass-chip">On Thyroxine</span></label>
+                <label><input type="checkbox" id="f3" class="chip-check"><span class="glass-chip">Query on Thyroxine</span></label>
+                <label><input type="checkbox" id="f4" class="chip-check"><span class="glass-chip">On Antithyroid Meds</span></label>
+                <label><input type="checkbox" id="f5" class="chip-check"><span class="glass-chip">Sick</span></label>
+                <label><input type="checkbox" id="f6" class="chip-check"><span class="glass-chip">Pregnant</span></label>
+                <label><input type="checkbox" id="f7" class="chip-check"><span class="glass-chip">Thyroid Surgery</span></label>
+                <label><input type="checkbox" id="f8" class="chip-check"><span class="glass-chip">I131 Treatment</span></label>
+                <label><input type="checkbox" id="f9" class="chip-check"><span class="glass-chip">Query Hypothyroid</span></label>
+                <label><input type="checkbox" id="f10" class="chip-check"><span class="glass-chip">Query Hyperthyroid</span></label>
+                <label><input type="checkbox" id="f11" class="chip-check"><span class="glass-chip">Lithium</span></label>
+                <label><input type="checkbox" id="f12" class="chip-check"><span class="glass-chip">Goitre</span></label>
+                <label><input type="checkbox" id="f13" class="chip-check"><span class="glass-chip">Tumor</span></label>
+                <label><input type="checkbox" id="f14" class="chip-check"><span class="glass-chip">Hypopituitary</span></label>
+                <label><input type="checkbox" id="f15" class="chip-check"><span class="glass-chip">Psych</span></label>
+            </div>
+        </div>
+
+        <div class="reveal">
+            <div id="formError" class="error-banner">
+                <i class="fas fa-exclamation-triangle"></i> Please fill out all required blood profile fields correctly before analyzing.
+            </div>
+            <button type="submit" id="analyzeBtn" class="glass-btn">
+                <span>Run AI Analysis</span> <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+
+    <div id="resultCard" class="result-glass">
+        
+        <div class="res-header">
+            <div class="res-header-left">
+                <div class="res-status-icon" id="statusIcon">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div class="res-header-texts">
+                    <span class="res-subtitle">AI Diagnostic Assessment</span>
+                    <h2 id="predictionText">Processing...</h2>
+                    <p id="confidenceText">Analyzing biomarkers</p>
+                </div>
+            </div>
+            <div style="width: 100px; height: 100px; position: relative;">
+                <canvas id="confidenceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="res-body">
+            
+            <div id="actionPlan" class="action-plan-card">
+                <h3><i class="fas fa-stethoscope"></i> Clinical Next Steps</h3>
+                <p id="actionPlanText"></p>
+            </div>
+
+            <div class="res-panel">
+                <span class="section-tag">Ensemble Class Probabilities</span>
+                <div style="position: relative; height: 120px; width: 100%;">
+                    <canvas id="probabilityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="res-panel">
+                <span class="section-tag">Base Model Decisions</span>
+                <div id="baseModelTable" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;"></div>
+            </div>
+
+            <div class="res-panel" style="margin-bottom: 0;">
+                <span class="section-tag">Feature Impact Analysis (SHAP)</span>
+                <div style="position: relative; height: 350px; width: 100%;">
+                    <canvas id="shapChart"></canvas>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <p id="modelVersionText" style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer style="text-align:center; color:#94a3b8; padding:30px; font-size:13px;">
+    © 2026 ThyroAI • Machine Learning Based Thyroid Diagnosis • Educational Purpose Only
+</footer>
+
+<script>
+    // --- EXACT MATCH JS FROM home.html ---
+
+    // Mouse Aura
+    const aura = document.getElementById('mouse-aura');
+    let mouseX = 0, mouseY = 0, auraX = 0, auraY = 0;
+    document.addEventListener('mousemove', e => {mouseX = e.clientX; mouseY = e.clientY;});
+    function animateAura() {
+        auraX += (mouseX - auraX) * 0.15;
+        auraY += (mouseY - auraY) * 0.15;
+        aura.style.left = auraX + 'px';
+        aura.style.top = auraY + 'px';
+        requestAnimationFrame(animateAura);
+    }
+    animateAura();
+
+    // Hover glow change
+    document.querySelectorAll('a, button, input, select, label, .glass-btn, .glass-chip').forEach(el => {
+        el.addEventListener('mouseenter', () => document.body.classList.add('hover-active'));
+        el.addEventListener('mouseleave', () => document.body.classList.remove('hover-active'));
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {if(entry.isIntersecting){entry.target.classList.add('active');}});
+    }, {threshold:0.1});
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Blob parallax
+    document.addEventListener('mousemove', e => {
+        const x = (window.innerWidth - e.pageX * 2) / 90;
+        const y = (window.innerHeight - e.pageY * 2) / 90;
+        document.querySelectorAll('.blob').forEach(b => b.style.transform = `translate(${x}px, ${y}px)`);
+    });
+
+    // Spotlight effect
+    document.querySelectorAll('.glass-panel').forEach(card => {
+        card.onmousemove = e => {
+            const rect = card.getBoundingClientRect();
+            card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+            card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+        };
+    });
+
+    // Ripple effect
+    document.querySelectorAll('.glass-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            let x = e.clientX - e.target.getBoundingClientRect().left;
+            let y = e.clientY - e.target.getBoundingClientRect().top;
+            let ripple = document.createElement('span');
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            this.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+        });
+    });
+
+    // --- FORM LOGIC ---
+    
+    // Clear error states on input
+    document.querySelectorAll('.required-num').forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('input-error');
+            document.getElementById('formError').style.display = 'none';
+        });
+    });
+
+    function validateForm() {
+        let isValid = true;
+        const requiredInputs = document.querySelectorAll('.required-num');
+        
+        requiredInputs.forEach(input => {
+            const val = parseFloat(input.value);
+            if (input.value.trim() === '' || isNaN(val) || val < 0) {
+                input.classList.add('input-error');
+                isValid = false;
+            } else {
+                input.classList.remove('input-error');
+            }
+        });
+
+        const errorBanner = document.getElementById('formError');
+        if (!isValid) {
+            errorBanner.style.display = 'block';
+            errorBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            errorBanner.style.display = 'none';
+        }
+        return isValid;
+    }
+
+    // MAIN PREDICTION FUNCTION
+    document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!validateForm()) return;
+
+        const btn = document.getElementById('analyzeBtn');
+        const originalBtnHTML = btn.innerHTML;
+        
+        btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>Processing...</span>`;
+        btn.disabled = true;
+
+        try {
+            let features = new Array(21).fill(0);
+
+            features[0] = parseFloat(document.getElementById("f0").value || 0);
+            features[1] = parseInt(document.getElementById("f1").value || 0);
+            features[16] = parseFloat(document.getElementById("f16").value || 0);
+            features[17] = parseFloat(document.getElementById("f17").value || 0);
+            features[18] = parseFloat(document.getElementById("f18").value || 0);
+            features[19] = parseFloat(document.getElementById("f19").value || 0);
+            features[20] = parseFloat(document.getElementById("f20").value || 0);
+
+            for (let i = 2; i <= 15; i++) {
+                const el = document.getElementById("f" + i);
+                if (el) features[i] = el.checked ? 1 : 0;
+            }
+
+            const response = await fetch("/predict", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({features})
+            });
+
+            if(!response.ok) throw new Error("Server response was not ok.");
+
+            const data = await response.json();
+            
+            setTimeout(() => {
+                showResult(data);
+                btn.innerHTML = originalBtnHTML;
+                btn.disabled = false;
+            }, 600);
+
+        } catch (error) {
+            console.error("Prediction Error:", error);
+            const errorBanner = document.getElementById('formError');
+            errorBanner.innerHTML = `<i class="fas fa-times-circle"></i> Connection error. Please ensure the backend server is running.`;
+            errorBanner.style.display = 'block';
+            
+            btn.innerHTML = originalBtnHTML;
+            btn.disabled = false;
+        }
+    });
+
+    function showResult(data) {
+        const rootCard = document.getElementById("resultCard");
+        const statusIcon = document.getElementById("statusIcon");
+        const actionPlanText = document.getElementById("actionPlanText");
+
+        rootCard.style.display = "block";
+
+        // Dynamic Styling Based on Result
+        if (data.prediction_label === "Normal") {
+            rootCard.style.setProperty('--status-color', '#10b981'); // Green
+            statusIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            actionPlanText.innerHTML = "Biomarkers indicate healthy thyroid function. Maintain a balanced diet rich in iodine and selenium. No immediate medication or advanced screening is indicated based on these inputs. Continue routine annual checkups.";
+        } else if (data.prediction_label === "Hyperthyroid") {
+            rootCard.style.setProperty('--status-color', '#f59e0b'); // Orange
+            statusIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            actionPlanText.innerHTML = "<strong>Elevated risk of Hyperthyroidism detected.</strong> The model indicates an overactive thyroid profile. Consider consulting an endocrinologist for a comprehensive panel (including Free T3, Free T4, and TSI antibodies) and potential antithyroid treatment planning.";
+        } else {
+            rootCard.style.setProperty('--status-color', '#ef4444'); // Red
+            statusIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+            actionPlanText.innerHTML = "<strong>Elevated risk of Hypothyroidism detected.</strong> The model indicates an underactive thyroid profile. Clinical correlation is recommended. Discuss starting or adjusting synthetic thyroxine (Levothyroxine) therapy with your healthcare provider and check TPO antibodies.";
+        }
+
+        document.getElementById("predictionText").innerHTML = data.prediction_label;
+        document.getElementById("confidenceText").innerHTML = "Ensemble Confidence: <strong>" + (data.confidence * 100).toFixed(1) + "%</strong>";
+
+        // 1. Confidence Donut Chart
+        if (window.confChart) window.confChart.destroy();
+        const predictedProb = data.probabilities[data.prediction_label] * 100;
+
+        window.confChart = new Chart(
+            document.getElementById("confidenceChart"),
+            {
+                type: "doughnut",
+                data: {
+                    datasets: [{
+                        data: [predictedProb, 100 - predictedProb],
+                        backgroundColor: [getComputedStyle(rootCard).getPropertyValue('--status-color').trim(), "rgba(0,0,0,0.08)"],
+                        borderWidth: 0, hoverOffset: 4
+                    }]
+                },
+                options: {
+                    cutout: "75%", responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+                },
+                plugins: [{
+                    id: 'centerText',
+                    beforeDraw(chart) {
+                        const {width, height, ctx} = chart;
+                        ctx.restore();
+                        ctx.font = "bold " + (height/3.5) + "px Outfit";
+                        ctx.textBaseline = "middle";
+                        ctx.fillStyle = "#1e293b"; 
+                        const text = predictedProb.toFixed(0) + "%";
+                        const textX = (width - ctx.measureText(text).width) / 2;
+                        const textY = height / 2;
+                        ctx.fillText(text, textX, textY);
+                        ctx.save();
+                    }
+                }]
+            }
+        );
+
+        // 2. Full Width Probability Bar Chart
+        if (window.probChart) window.probChart.destroy();
+        const labels = Object.keys(data.probabilities);
+        const values = Object.values(data.probabilities).map(p => p * 100);
+
+        window.probChart = new Chart(
+            document.getElementById("probabilityChart"),
+            {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ["#6366f1", "#a855f7", "#ec4899"],
+                        borderRadius: 6, barThickness: 20
+                    }]
+                },
+                options: {
+                    indexAxis: "y", responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { display: false, max: 100 },
+                        y: { grid: { display: false }, border: {display: false}, ticks: { font: { family: 'Outfit', weight: '600' } } }
+                    },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+                },
+                plugins: [{
+                    id: 'valueLabel',
+                    afterDatasetsDraw(chart) {
+                        const {ctx} = chart;
+                        ctx.save();
+                        chart.data.datasets[0].data.forEach((value, index) => {
+                            const meta = chart.getDatasetMeta(0);
+                            const bar = meta.data[index];
+                            ctx.fillStyle = "#1e293b";
+                            ctx.font = "600 13px Outfit";
+                            ctx.fillText(value.toFixed(1) + "%", bar.x + 8, bar.y + 4);
+                        });
+                        ctx.restore();
+                    }
+                }]
+            }
+        );
+
+        // 3. Base Model Grid (FIXED HTML INJECTION)
+        const tableDiv = document.getElementById("baseModelTable");
+        let baseModelsHTML = ""; // Store string to prevent layout destruction loop
+        
+        Object.entries(data.base_model_predictions).forEach(([name, result], index) => {
+            const color = result.prediction === "Normal" ? "#10b981" : result.prediction === "Hyperthyroid" ? "#f59e0b" : "#ef4444";
+            const delay = index * 0.08;
+            baseModelsHTML += `
+                <div class="base-model-row" style="animation: slideDown 0.4s ease forwards; animation-delay: ${delay}s; opacity: 0; transform: translateY(-10px);">
+                    <strong style="color:#334155; font-size:14px;"><i class="fas fa-layer-group" style="margin-right:8px; color:#6366f1;"></i> ${name}</strong>
+                    <span style="color:${color}; font-size: 13px; font-weight:700; background:white; padding:4px 10px; border-radius:20px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                        ${result.prediction} ${result.confidence ? "(" + (result.confidence*100).toFixed(0) + "%)" : ""}
+                    </span>
+                </div>`;
+        });
+        
+        tableDiv.innerHTML = baseModelsHTML; // Inject into DOM only once at the end
+
+        // 4. SHAP Chart
+        if (window.shapChartInstance) window.shapChartInstance.destroy();
+        const shapLabels = data.explanation.all_selected_features_sorted.map(f => f.feature);
+        const shapValues = data.explanation.all_selected_features_sorted.map(f => f.impact);
+        const shapColors = shapValues.map(v => v > 0 ? "rgba(16, 185, 129, 0.85)" : "rgba(239, 68, 68, 0.85)");
+
+        window.shapChartInstance = new Chart(
+            document.getElementById("shapChart"),
+            {
+                type: "bar",
+                data: {
+                    labels: shapLabels,
+                    datasets: [{ label: "Impact on Prediction", data: shapValues, backgroundColor: shapColors, borderRadius: 4 }]
+                },
+                options: {
+                    indexAxis: "y", responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: "rgba(0,0,0,0.05)" }, border: {display: false}, ticks: { display: false } },
+                        y: { grid: { display: false }, border: {display: false}, ticks: { font: { family: 'Outfit', weight: '500', size: 12 } } }
+                    },
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return " Impact: " + context.raw.toFixed(4); } } } }
+                }
+            }
+        );
+
+        document.getElementById("modelVersionText").innerHTML = "<i class='fas fa-code-branch'></i> Model Build: " + data.model_version;
+
+        setTimeout(() => {
+            document.getElementById("resultCard").scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+</script>
+
+</body>
+</html>
