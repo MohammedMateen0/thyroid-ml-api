@@ -143,5 +143,3 @@ It does not replace professional medical diagnosis.
 Mohammed Mateen
 Machine Learning & Data Science Project
 2026
-
-````
