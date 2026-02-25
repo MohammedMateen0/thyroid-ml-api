@@ -1,48 +1,53 @@
-# 🧬 ThyroAI – Explainable Machine Learning Based Thyroid Diagnosis System
+# 🧬 ThyroAI  
+### Explainable Machine Learning System for Thyroid Disorder Classification
 
-A complete end-to-end Machine Learning system for automated thyroid disorder classification using ensemble learning and explainable AI (SHAP).
+An end-to-end Machine Learning pipeline for automated thyroid disease diagnosis using ensemble learning and explainable AI (SHAP).
 
-This project includes:
+This project integrates:
 
 - Data preprocessing pipeline
-- Feature selection
-- Class imbalance handling (SMOTE)
-- 11 base models
-- Stacking ensemble
-- Model evaluation & visualization
+- Feature selection (Mutual Information)
+- Class imbalance correction (SMOTE)
+- 11 base machine learning models
+- Stacking ensemble architecture
+- Full comparative evaluation
 - Explainability using SHAP
 - FastAPI deployment
-- Docker support
+- Docker containerization
 
 ---
 
-## 📌 Problem Statement
+# 📌 Problem Statement
 
-Thyroid disorders such as Hyperthyroidism and Hypothyroidism are common endocrine conditions. Early detection is critical for effective treatment.
+Thyroid disorders such as **Hyperthyroidism** and **Hypothyroidism** are prevalent endocrine diseases that require early detection for effective treatment.
 
-This project builds a robust ensemble machine learning system that:
+This project builds a robust ensemble-based ML system that:
 
 - Classifies patients into:
-  - Normal
-  - Hyperthyroid
-  - Hypothyroid
-- Uses clinical + biochemical features
+  - 🟢 Normal
+  - 🟡 Hyperthyroid
+  - 🔴 Hypothyroid
+- Uses clinical and biochemical biomarkers
 - Provides explainable predictions
-- Compares multiple ML models
-- Produces publication-level evaluation graphs
+- Compares multiple ML algorithms
+- Produces publication-level evaluation visualizations
 
 ---
 
-## 📊 Dataset
+# 📊 Dataset
 
-Source: UCI Thyroid Disease Dataset (ANN dataset)
+**Source:** UCI Thyroid Disease Dataset (ANN subset)
 
 - Training file: `ann-train.data`
 - Test file: `ann-test.data`
 - Total features: 21
-- Selected features (after feature selection): 12
+- Selected features (after selection): 12
 
-### Features Used
+---
+
+## 🧪 Features Used
+
+Clinical & biochemical attributes:
 
 - Age
 - Sex
@@ -68,33 +73,33 @@ Source: UCI Thyroid Disease Dataset (ANN dataset)
 
 ---
 
-## ⚙️ Project Architecture
+# ⚙️ System Architecture
 
 ```
 Raw Data
    ↓
-Imputation (Median)
+Imputation (Median Strategy)
    ↓
 Standard Scaling
    ↓
-Feature Selection (Mutual Information - Top 12)
+Feature Selection (Top 12 - Mutual Information)
    ↓
 SMOTE (Class Balancing)
    ↓
-Base Models (11)
+11 Base Models
    ↓
-Stacking Ensemble
+Stacking Ensemble (Meta Logistic Regression)
    ↓
-Evaluation & Explainability
+Evaluation + SHAP Explainability
    ↓
 FastAPI Deployment
 ```
 
 ---
 
-## 🤖 Models Used
+# 🤖 Models Implemented
 
-### Base Models
+## Base Models (11)
 
 - Random Forest
 - Balanced Random Forest
@@ -104,31 +109,33 @@ FastAPI Deployment
 - AdaBoost
 - Logistic Regression
 - Ridge Classifier
-- Support Vector Machine (RBF)
+- Support Vector Machine (RBF Kernel)
 - K-Nearest Neighbors
 - Gaussian Naive Bayes
 
-### Meta Model (Stacking)
+## Meta Model
 
 - Logistic Regression (balanced)
 
 ---
 
-## 📈 Evaluation Metrics
+# 📈 Evaluation Metrics
+
+The system evaluates each model using:
 
 - Accuracy
-- Precision
-- Recall
-- F1 Score
+- Precision (Weighted)
+- Recall (Weighted)
+- F1 Score (Weighted & Macro)
 - Confusion Matrix (per model)
 - Multiclass ROC Curve
-- Cross Validation (5-Fold Macro F1)
+- 5-Fold Cross-Validation
 - Feature Importance (XGBoost)
 - SHAP Global Feature Importance
 
 ---
 
-## 📊 Generated Evaluation Outputs
+# 📊 Generated Evaluation Outputs
 
 All plots are saved inside:
 
@@ -136,74 +143,100 @@ All plots are saved inside:
 /outputs/
 ```
 
-### Generated Graphs:
+---
 
-- Class Distribution (Before SMOTE)
-![alt text](class_distribution_before_smote.png)
-- Class Distribution (After SMOTE)
-![alt text](class_distribution_after_smote.png)
-- Correlation Heatmap
-![alt text](correlation_heatmap.png)
-- Confusion Matrix (for each model)
-- Accuracy Comparison (All Models)
-![alt text](confusion_matrix_ada.png)
-![alt text](confusion_matrix_brf.png)
-![alt text](confusion_matrix_et.png)
-![alt text](confusion_matrix_gb.png) 
-![alt text](confusion_matrix_gnb.png) 
-![alt text](confusion_matrix_knn.png) 
-![alt text](confusion_matrix_rf.png) 
-![alt text](confusion_matrix_ridge.png) 
-![alt text](confusion_matrix_Stacking.png) 
-![alt text](confusion_matrix_svc.png)
-![alt text](confusion_matrix_lr.png) 
-![alt text](confusion_matrix_xgb.png)
-- F1 Score Comparison
-![alt text](f1_all_models.png)
-- Cross-Validation Comparison
-![alt text](cv_comparison_all_models.png)
-- Multiclass ROC Curve
-![alt text](roc_multiclass_stacking.png)
-- XGBoost Feature Importance
-![alt text](xgb_feature_importance_named.png)
-- SHAP Summary Plot
-![alt text](shap_summary_named.png)
+## 📉 Class Distribution
+
+### Before SMOTE
+![Class Distribution Before SMOTE](outputs/class_distribution_before_smote.png)
+
+### After SMOTE
+![Class Distribution After SMOTE](outputs/class_distribution_after_smote.png)
 
 ---
 
-## 🧠 Explainability (SHAP)
+## 🔍 Correlation Heatmap
+![Correlation Heatmap](outputs/correlation_heatmap.png)
+
+---
+
+## 📊 Confusion Matrices (All Models)
+
+Examples:
+
+![Confusion Matrix RF](outputs/confusion_matrix_rf.png)
+![Confusion Matrix XGB](outputs/confusion_matrix_xgb.png)
+![Confusion Matrix Stacking](outputs/confusion_matrix_Stacking.png)
+
+*(Full set available in /outputs folder)*
+
+---
+
+## 📈 Accuracy Comparison
+![Accuracy Comparison](outputs/accuracy_all_models.png)
+
+---
+
+## 📈 F1 Score Comparison
+![F1 Score Comparison](outputs/f1_all_models.png)
+
+---
+
+## 📈 Cross-Validation Comparison
+![CV Comparison](outputs/cv_comparison_all_models.png)
+
+---
+
+## 📈 Multiclass ROC Curve (Stacking)
+![ROC Curve](outputs/roc_multiclass_stacking.png)
+
+---
+
+## 🌳 XGBoost Feature Importance
+![XGB Feature Importance](outputs/xgb_feature_importance_named.png)
+
+---
+
+## 🧠 SHAP Global Feature Importance
+![SHAP Summary](outputs/shap_summary_named.png)
+
+---
+
+# 🧠 Explainability
 
 SHAP is used to:
 
-- Identify most influential biomarkers
-- Understand class-specific predictions
-- Provide transparent AI decisions
+- Identify influential biomarkers
+- Analyze feature contribution
+- Improve clinical interpretability
 
 Example interpretation:
 
-> TSH and FTI show highest contribution in differentiating Hyperthyroid cases.
+> TSH and FTI show high contribution in differentiating hyperthyroid and hypothyroid cases.
+
+This enhances transparency in clinical AI systems.
 
 ---
 
-## 🚀 Running the Evaluation
+# 🚀 Running the Evaluation
 
-Activate virtual environment:
+### 1️⃣ Activate virtual environment
 
 ```bash
 venv\Scripts\activate
 ```
 
-Run full evaluation:
+### 2️⃣ Run evaluation
 
 ```bash
 python paper_evaluation.py
 ```
 
-All plots will be saved inside `/outputs/`.
+All results will be saved inside `/outputs`.
 
 ---
 
-## 🌐 FastAPI Deployment
+# 🌐 FastAPI Deployment
 
 Run locally:
 
@@ -211,13 +244,13 @@ Run locally:
 uvicorn app.main:app --reload
 ```
 
-Open:
+Open in browser:
 
 ```
 http://127.0.0.1:8000
 ```
 
-Endpoints:
+### Available Endpoints
 
 - `/predict`
 - `/predict-batch`
@@ -225,15 +258,15 @@ Endpoints:
 
 ---
 
-## 🐳 Docker Support
+# 🐳 Docker Support
 
-Build image:
+### Build Docker Image
 
 ```bash
 docker build -t thyroid-api .
 ```
 
-Run container:
+### Run Container
 
 ```bash
 docker run -p 8000:8000 thyroid-api
@@ -241,12 +274,12 @@ docker run -p 8000:8000 thyroid-api
 
 ---
 
-## 📦 Project Structure
+# 📂 Project Structure
 
 ```
 ML42/
 │
-├── app/                     # FastAPI app
+├── app/
 │   ├── main.py
 │   └── templates/
 │
@@ -260,8 +293,8 @@ ML42/
 │   ├── feature_selection.py
 │   └── ...
 │
-├── outputs/                 # Evaluation plots
-├── artifacts/               # Saved models
+├── outputs/
+├── artifacts/
 ├── paper_evaluation.py
 ├── requirements.txt
 └── Dockerfile
@@ -269,20 +302,20 @@ ML42/
 
 ---
 
-## 🏆 Key Contributions
+# 🏆 Key Contributions
 
-- Large ensemble of 11 models
-- Stacking meta-learner
+- Large multi-model ensemble system
+- Stacking meta-learner architecture
 - Feature selection for dimensionality reduction
-- SMOTE for class balancing
-- Full comparative evaluation
-- Explainable AI integration
-- Production-ready API
-- Docker deployment ready
+- SMOTE-based class balancing
+- Comprehensive comparative evaluation
+- SHAP-based explainable AI
+- Production-ready REST API
+- Dockerized deployment pipeline
 
 ---
 
-## 📚 Technologies Used
+# 📚 Technologies Used
 
 - Python 3.11
 - Scikit-learn
@@ -296,34 +329,34 @@ ML42/
 
 ---
 
-## 📌 Academic Relevance
+# 🎓 Academic Relevance
 
-This project demonstrates:
+Demonstrates:
 
 - Advanced ensemble learning
-- Model comparison methodology
-- Multiclass evaluation
+- Multiclass evaluation methodology
 - Explainable AI in healthcare
-- Real-world ML deployment pipeline
+- End-to-end ML pipeline design
+- Model comparison and validation
 
 Suitable for:
 
 - Final Year Major Project
-- Machine Learning Coursework
+- ML Coursework
 - Research Demonstration
 - Clinical AI Prototype
 
 ---
 
-## ⚠️ Disclaimer
+# ⚠️ Disclaimer
 
-This system is built for educational and research purposes only.  
-It is not a replacement for professional medical diagnosis.
+This system is intended for educational and research purposes only.  
+It is not a substitute for professional medical diagnosis.
 
 ---
 
-## 👨‍💻 Author
+# 👨‍💻 Author
 
-Mohammed Mateen  
+**Mohammed Mateen**  
 Machine Learning & Data Science Enthusiast  
 Hyderabad, India
