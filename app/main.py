@@ -188,10 +188,11 @@ def run_inference(features: List[float]):
         "confidence": confidence,
         "risk_level": risk_flag,
         "probabilities": {
-            "Normal": float(probs[0]),
+            "Hypothyroid": float(probs[0]),
             "Hyperthyroid": float(probs[1]),
-            "Hypothyroid": float(probs[2])
+            "Normal": float(probs[2])
         },
+
         "explanation": {
             "all_selected_features_sorted": [
                 {"feature": n, "impact": float(v)}
