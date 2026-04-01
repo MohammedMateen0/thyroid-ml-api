@@ -61,10 +61,11 @@ model = joblib.load(BASE_DIR / "artifacts/model.pkl")
 MODEL_VERSION = "v1.0.0"
 
 LABEL_MAP = {
-    1: "Normal",
-    2: "Hyperthyroid",
-    3: "Hypothyroid"
+    1: "Hypothyroid",   # Maps to model output 0
+    2: "Hyperthyroid",  # Maps to model output 1
+    3: "Normal"         # Maps to model output 2
 }
+
 
 
 # SHAP Setup (XGBoost inside stack)
