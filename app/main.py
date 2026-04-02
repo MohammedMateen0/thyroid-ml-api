@@ -16,13 +16,21 @@ templates = Jinja2Templates(directory="app/templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
-
+    return templates.TemplateResponse(
+        request=request, 
+        name="home.html", 
+        context={"request": request}
+    )
 
 @app.get("/predictor", response_class=HTMLResponse)
 async def predictor(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+        request=request, 
+        name="index.html", 
+        context={"request": request}
+    )
 # Logging
+
 
 
 logging.basicConfig(level=logging.INFO)
