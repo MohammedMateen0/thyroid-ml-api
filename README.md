@@ -1,5 +1,4 @@
 # 🧬 ThyroAI 
----
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-orange)
 ![Status](https://img.shields.io/badge/Status-Completed-success)
