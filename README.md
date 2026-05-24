@@ -1,4 +1,9 @@
-# 🧬 ThyroAI  
+# 🧬 ThyroAI 
+---
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-orange)
+![Status](https://img.shields.io/badge/Status-Completed-success)
+
 ### Explainable Machine Learning System for Thyroid Disorder Classification
 
 An end-to-end Machine Learning pipeline for automated thyroid disease diagnosis using ensemble learning and explainable AI (SHAP).
