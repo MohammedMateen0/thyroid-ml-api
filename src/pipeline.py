@@ -10,9 +10,7 @@ from src.model import build_model
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# -----------------------------
-# 1️⃣ Load Train and Test Separately
-# -----------------------------
+
 train = pd.read_csv(BASE_DIR / "data/ann-train.data", sep=r"\s+", header=None)
 test = pd.read_csv(BASE_DIR / "data/ann-test.data", sep=r"\s+", header=None)
 
@@ -21,9 +19,7 @@ y_train = train.iloc[:, -1]
 
 X_test = test.iloc[:, :-1]
 y_test = test.iloc[:, -1]
-# -----------------------------
-# 2️⃣ Cross Validation
-# -----------------------------
+
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score
 import numpy as np
@@ -61,35 +57,25 @@ print(y_train.value_counts())
 print("\nOriginal Test Distribution:")
 print(y_test.value_counts())
 
-# -----------------------------
-# 2️⃣ Preprocess (fit only on train)
-# -----------------------------
+
 X_train, imputer, scaler = preprocess(X_train, fit=True)
 X_test = preprocess(X_test, fit=False, imputer=imputer, scaler=scaler)
 
-# -----------------------------
-# 3️⃣ Feature Selection (fit only on train)
-# -----------------------------
+
 X_train, selector = select_features(X_train, y_train, k=12)
 X_test = selector.transform(X_test)
 
-# -----------------------------
-# 4️⃣ Apply SMOTE ONLY on train
-# -----------------------------
+
+
 X_train_bal, y_train_bal = balance_data(X_train, y_train)
 
 print("\nAfter SMOTE Train Distribution:")
 print(pd.Series(y_train_bal).value_counts())
 
-# -----------------------------
-# 5️⃣ Train Model
-# -----------------------------
 model = build_model()
 model.fit(X_train_bal, y_train_bal)
 
-# -----------------------------
-# 6️⃣ Evaluate on REAL Test Set
-# -----------------------------
+
 y_pred = model.predict(X_test)
 
 print("\nConfusion Matrix (Test Set):")
@@ -98,9 +84,7 @@ print(confusion_matrix(y_test, y_pred))
 print("\nClassification Report (Test Set):")
 print(classification_report(y_test, y_pred))
 
-# -----------------------------
-# 7️⃣ Save Artifacts
-# -----------------------------
+
 joblib.dump(imputer, BASE_DIR / "artifacts/imputer.pkl")
 joblib.dump(scaler, BASE_DIR / "artifacts/scaler.pkl")
 joblib.dump(selector, BASE_DIR / "artifacts/selector.pkl")

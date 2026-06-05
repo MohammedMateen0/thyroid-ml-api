@@ -16,13 +16,21 @@ templates = Jinja2Templates(directory="app/templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
-
+    return templates.TemplateResponse(
+        request=request, 
+        name="home.html", 
+        context={"request": request}
+    )
 
 @app.get("/predictor", response_class=HTMLResponse)
 async def predictor(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+        request=request, 
+        name="index.html", 
+        context={"request": request}
+    )
 # Logging
+
 
 
 logging.basicConfig(level=logging.INFO)
@@ -61,10 +69,11 @@ model = joblib.load(BASE_DIR / "artifacts/model.pkl")
 MODEL_VERSION = "v1.0.0"
 
 LABEL_MAP = {
-    1: "Normal",
-    2: "Hyperthyroid",
-    3: "Hypothyroid"
+    1: "Hypothyroid",   # Maps to model output 0
+    2: "Hyperthyroid",  # Maps to model output 1
+    3: "Normal"         # Maps to model output 2
 }
+
 
 
 # SHAP Setup (XGBoost inside stack)
@@ -188,10 +197,11 @@ def run_inference(features: List[float]):
         "confidence": confidence,
         "risk_level": risk_flag,
         "probabilities": {
-            "Normal": float(probs[0]),
+            "Hypothyroid": float(probs[0]),
             "Hyperthyroid": float(probs[1]),
-            "Hypothyroid": float(probs[2])
+            "Normal": float(probs[2])
         },
+
         "explanation": {
             "all_selected_features_sorted": [
                 {"feature": n, "impact": float(v)}
